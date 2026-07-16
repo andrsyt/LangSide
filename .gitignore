@@ -11,6 +11,7 @@ id_rsa.pub
 credentials.json
 service-account*.json
 
+
 # --- Python ---
 __pycache__/
 *.py[cod]
@@ -25,6 +26,7 @@ dist/
 venv/
 env/
 ENV/
+scripts/
 
 # --- IDE / OS / editor ---
 .idea/
