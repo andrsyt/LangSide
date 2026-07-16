@@ -1,0 +1,132 @@
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: learn_english_postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-learn_english_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - learn_english_network
+    restart: unless-stopped
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: learn_english_redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - learn_english_network
+    restart: unless-stopped
+
+  # FastAPI application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learn_english_api
+    env_file:
+      - .env
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learn_english_db}
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      # Secrets
+      SECRET_KEY: ${SECRET_KEY}
+      # AI providers
+      AI_PROVIDER: ${AI_PROVIDER:-groq}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+      HUGGINGFACE_MODEL: ${HUGGINGFACE_MODEL:-microsoft/Phi-3-mini-4k-instruct}
+      # RevenueCat
+      REVENUECAT_WEBHOOK_SECRET: ${REVENUECAT_WEBHOOK_SECRET:-}
+      REVENUECAT_API_KEY: ${REVENUECAT_API_KEY:-}
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Access token TTL (10 years for the mobile app)
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-5256000}
+    ports:
+      - "8000:8000"  # Expose port for Nginx
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - learn_english_network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Running migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting API server...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learn_english_worker
+    env_file:
+      - .env
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learn_english_db}
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      # Secrets
+      SECRET_KEY: ${SECRET_KEY}
+      # AI providers
+      AI_PROVIDER: ${AI_PROVIDER:-groq}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+      HUGGINGFACE_MODEL: ${HUGGINGFACE_MODEL:-microsoft/Phi-3-mini-4k-instruct}
+      # RevenueCat
+      REVENUECAT_WEBHOOK_SECRET: ${REVENUECAT_WEBHOOK_SECRET:-}
+      REVENUECAT_API_KEY: ${REVENUECAT_API_KEY:-}
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Access token TTL (10 years for the mobile app)
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-5256000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - learn_english_network
+    restart: unless-stopped
+    command:
+      celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  learn_english_network:
+    driver: bridge
+

@@ -1,0 +1,44 @@
+# Virtualenv & caches (main cause of huge build context)
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Git / IDE / secrets
+.git/
+.gitignore
+.idea/
+.vscode/
+.cursor/
+.cursorrules
+*.swp
+*~
+.env
+.env.*
+!.env.example
+
+# Local-only scripts (CSV data stays for runtime)
+localization/__pycache__/
+app/scripts/
+
+# Logs & OS
+logs/
+*.log
+.DS_Store
+Thumbs.db
+
+# Dev compose (prod uses docker-compose.prod.yml)
+docker-compose.yml
+scripts/run-dev-api.sh
+
+# Tests
+tests/
+htmlcov/
+.coverage

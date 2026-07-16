@@ -1,0 +1,12 @@
+[tool.ruff]
+target-version = "py312"
+src = ["app", "tests"]
+exclude = [".venv", "alembic/versions"]
+
+[tool.ruff.lint]
+# Keep CI focused on real defects (unused imports, undefined names, syntax).
+# Full style (isort / line length) can be tightened later without blocking merges.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/scripts/**" = ["E402"]

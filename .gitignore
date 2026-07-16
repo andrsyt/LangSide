@@ -1,0 +1,68 @@
+# --- Secrets (never commit) ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.p12
+*.key
+id_rsa
+id_rsa.pub
+credentials.json
+service-account*.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+
+# --- IDE / OS / editor ---
+.idea/
+.vscode/
+.cursor/
+.cursorrules
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.code-workspace
+
+# --- Runtime / local data ---
+logs/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+tmp/
+temp/
+.cache/
+
+# --- Test / coverage / type caches ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# --- Local planning drafts (not for public surface) ---
+docs/internal/
+
+# --- Optional local dumps / archives ---
+*.zip
+*.tar
+*.tar.gz
+*.rar
+__MACOSX/
